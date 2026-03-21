@@ -65,3 +65,29 @@ export const XPSource = {
 } as const;
 
 export type XPSource = (typeof XPSource)[keyof typeof XPSource];
+
+// Zod schema for validation pact creating input.
+// Used by the API to validate the request body AND by the mobile app
+// to validate the form before asending - one schemam, two places , zero drift.
+export const createPactSchema = z.object({
+  name: z.string().min(1).max(100),
+  description: z.string().max(500).optional(),
+  frequency: z.enum(["DAILY", "WEEKLY"]),
+
+  // Only required when frequency is WEEKLY - e.g "3 times a week"
+  weeklyTarget: z.number().int().min(1).max(7).optional(),
+
+  // Tier is immutable after creation - validated strictly between 1 and 4
+  consequenceTier: z.number().int().min(1).max(4),
+
+  // Grace days capped at 7 - more than that defeats the purpose of AION
+  graceDaysAllowed: z.number().int().min(0).max(7),
+
+  starteDate: z.string().datetime(),
+
+  // null means infinite pact - user commits unit they manually end it
+  endDate: z.string().datetime().optional(),
+});
+
+// Derive the TypeScript type from the schema — never write the type manually
+export type CreatePactInput = z.infer<typeof createPactSchema>;
