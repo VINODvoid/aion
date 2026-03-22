@@ -62,16 +62,140 @@ model Pact {
   createdAt DateTime   @default(now())
 
   // Relations
-  user        User         @relation(fields: [userId], references: [id], onDelete:
-  Cascade)
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   checkIns    CheckIn[]
-  streak      Streak? // one streak record per pact
+  streak      Streak?      // one streak record per pact
   consequence Consequence? // one consequence config per pact
   graceDays   GraceDay[]
 
   @@index([userId, status]) // most common query: get all active pacts for a user
   @@map("pacts")
 }
+
+// ============================================================
+// CHECK-IN
+// ============================================================
+
+model CheckIn {
+  id     String @id @default(uuid())
+  pactId String
+  userId String
+
+  // Stored as UTC midnight — timezone conversion happens at query time
+  // Never store local time in the DB — always UTC
+  date String
+
+  // Optional proof — photo URL, link, or note attached to the check-in
+  proof String?
+
+  // XP is calculated and frozen at check-in time based on current streak
+  // Not recalculated later — what you earned stays earned
+  xpEarned Int
+
+  createdAt DateTime @default(now())
+
+  pact Pact @relation(fields: [pactId], references: [id], onDelete: Cascade)
+
+  // Prevents duplicate check-ins for the same pact on the same day
+  @@unique([pactId, date])
+  @@index([pactId, date])
+  @@map("check_ins")
+}
+
+// ============================================================
+// STREAK
+// ============================================================
+
+model Streak {
+  id     String @id @default(uuid())
+  pactId String @unique
+
+  currentStreak Int   @default(0)
+  longestStreak Int   @default(0)
+
+  // Multiplier resets on a missed day but level does not
+  // Increases at 7-day and 30-day milestones per STREAK_MULTIPLIERS in @aion/shared
+  multiplier Float @default(1.0)
+
+  // Null until the first check-in — used to detect missed days
+  lastCheckInDate String?
+
+  pact Pact @relation(fields: [pactId], references: [id], onDelete: Cascade)
+
+  @@map("streaks")
+}
+
+// ============================================================
+// CONSEQUENCE
+// ============================================================
+
+model Consequence {
+  id     String @id @default(uuid())
+  pactId String @unique
+
+  type   ConsequenceType
+  status ConsequenceStatus @default(ARMED)
+
+  // JSON blob — structure varies by tier:
+  // Tier 1: { shameTemplate: string }
+  // Tier 2: { lockDurationMinutes: number }
+  // Tier 3: { amountINR: number, ngoId: string }
+  // Tier 4: all of the above combined
+  config Json
+
+  // Populated only for Tier 3 and 4 — pre-authorized at pact creation
+  razorpayMandateId String?
+
+  // Timestamp of when the consequence was executed
+  firedAt DateTime?
+
+  pact Pact @relation(fields: [pactId], references: [id], onDelete: Cascade)
+
+  @@map("consequences")
+}
+
+// ============================================================
+// GRACE DAY
+// ============================================================
+
+model GraceDay {
+  id     String @id @default(uuid())
+  pactId String
+
+  // Date the grace day was consumed — stored as YYYY-MM-DD string in user's timezone
+  date   String
+
+  // Optional reason the user provides — shown in history
+  reason String?
+
+  pact Pact @relation(fields: [pactId], references: [id], onDelete: Cascade)
+
+  // Prevents deducting two grace days for the same missed day
+  @@unique([pactId, date])
+  @@map("grace_days")
+}
+
+// ============================================================
+// XP LOG
+// ============================================================
+
+model XPLog {
+  id     String   @id @default(uuid())
+  userId String
+  amount Int
+  source XPSource
+
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("xp_logs")
+}
+
+// ============================================================
+// ENUMS
+// ============================================================
 
 enum Frequency {
   DAILY
@@ -83,4 +207,26 @@ enum PactStatus {
   COMPLETED
   FAILED
   PAUSED
+}
+
+enum ConsequenceType {
+  SHAME
+  LOCK
+  FINANCIAL
+  NUCLEAR
+}
+
+enum ConsequenceStatus {
+  ARMED
+  FIRED
+  SKIPPED_GRACE
+  DEBT
+  DISARMED
+}
+
+enum XPSource {
+  CHECKIN
+  PACT_COMPLETE
+  MILESTONE
+  BONUS
 }
