@@ -1,24 +1,22 @@
-import { PrismaClient } from "./generated/prisma";
+import { PrismaClient } from "./generated/prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
 
-// Singleton pattern — prevents multiple Prisma Client instances in development.
-// Bun's hot reload re-imports modules on every change. Without this guard,
-// each reload creates a new connection pool and exhausts the database connections.
+// Prisma v7 uses driver adapters for database connections.
+// PrismaPg wraps the pg driver and passes it to PrismaClient.
+const adapter = new PrismaPg({
+  connectionString: process.env.DATABASE_URL,
+});
+
+// Singleton pattern — prevents multiple connection pools during hot reload
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-export const db =
-  globalForPrisma.prisma ??
-  new PrismaClient({
-    log:
-      process.env.NODE_ENV === "development"
-        ? ["query", "warn", "error"]
-        : ["warn", "error"],
-  });
+export const db = globalForPrisma.prisma ?? new PrismaClient({ adapter });
 
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = db;
 }
 
 // Re-export generated types so other packages import from @aion/db, not deep paths
-export * from "./generated/prisma";
+export * from "./generated/prisma/client";
