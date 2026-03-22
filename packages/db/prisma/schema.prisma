@@ -64,7 +64,7 @@ model Pact {
   // Relations
   user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   checkIns    CheckIn[]
-  streak      Streak?      // one streak record per pact
+  streak      Streak? // one streak record per pact
   consequence Consequence? // one consequence config per pact
   graceDays   GraceDay[]
 
@@ -110,8 +110,8 @@ model Streak {
   id     String @id @default(uuid())
   pactId String @unique
 
-  currentStreak Int   @default(0)
-  longestStreak Int   @default(0)
+  currentStreak Int @default(0)
+  longestStreak Int @default(0)
 
   // Multiplier resets on a missed day but level does not
   // Increases at 7-day and 30-day milestones per STREAK_MULTIPLIERS in @aion/shared
@@ -163,7 +163,7 @@ model GraceDay {
   pactId String
 
   // Date the grace day was consumed — stored as YYYY-MM-DD string in user's timezone
-  date   String
+  date String
 
   // Optional reason the user provides — shown in history
   reason String?
