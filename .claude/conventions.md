@@ -21,7 +21,9 @@ type: project
   // Avoid
   enum ConsequenceTier { SHAME = 1, LOCK = 2, FINANCIAL = 3, NUCLEAR = 4 }
   ```
-- **Zod for all external input validation** — API request bodies, webhook payloads, env vars
+- **Zod v4 for all external input validation** — API request bodies, webhook payloads, env vars
+  - We use Zod v4 (`zod@^4.x`). The API is largely the same as v3 but some internals differ.
+  - Use `z.object`, `z.string`, `z.enum` etc. as normal. `z.infer<typeof schema>` still works.
 
 ---
 
@@ -188,6 +190,17 @@ useEffect(() => { fetch('/api/pacts').then(...) }, [])
 ---
 
 ## Prisma Patterns
+
+### Prisma v7 — important differences from v6
+- `DATABASE_URL` lives in `prisma.config.ts` (not `schema.prisma` datasource block)
+- `PrismaClient` requires a driver adapter — always instantiate with `PrismaPg`:
+  ```ts
+  import { PrismaPg } from '@prisma/adapter-pg'
+  const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL })
+  export const db = new PrismaClient({ adapter })
+  ```
+- Import types from `@aion/db` (re-exported from generated client), never from deep paths
+- Generated client is at `packages/db/src/generated/prisma/client` — never edit it directly
 
 ### Always select specific fields — never `findMany` without `select`
 ```ts
