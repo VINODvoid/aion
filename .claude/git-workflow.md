@@ -32,11 +32,13 @@ main
  │
  ├── develop            ← integration branch (all features merge here first)
  │    │
- │    ├── feature/AION-001-pact-crud
- │    ├── feature/AION-002-consequence-engine
- │    ├── feature/AION-003-razorpay-mandate
- │    ├── fix/AION-042-streak-timezone-bug
+ │    ├── feature/AION-005-db-migration      ← next up
+ │    ├── feature/AION-006-clerk-webhook
+ │    ├── feature/AION-007-api-routes
+ │    ├── fix/AION-xxx-streak-timezone-bug
  │    └── chore/update-expo-sdk
+ │
+ │   [Merged: AION-001 monorepo, AION-002 db-schema, AION-003 api-scaffold, AION-004 queue-scaffold]
  │
  ├── release/1.0.0      ← created from develop when MVP is ready for store submission
  │    └── (only hotfixes and release prep commits allowed here)

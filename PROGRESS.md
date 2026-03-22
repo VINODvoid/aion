@@ -3,28 +3,29 @@
 **Phase**: MVP (V1) — Solo Mode
 **Started**: March 2026
 **Target**: App Store + Play Store submission
+**Current status**: Scaffold complete (4 PRs merged). Starting backend implementation.
 
 ---
 
 ## Infrastructure & Tooling
 
-- [ ] Monorepo scaffold (Bun workspaces, package structure)
-- [ ] TypeScript configuration (strict mode, path aliases per package)
-- [ ] ESLint + Prettier configuration
-- [ ] Prisma schema (all data models)
+- [x] Monorepo scaffold (Bun workspaces, package structure)
+- [x] TypeScript configuration (strict mode, path aliases per package)
+- [x] ESLint + Prettier configuration
+- [x] Prisma schema (all data models)
 - [ ] Initial database migration
-- [ ] Redis setup (local dev via Docker)
-- [ ] Environment variable setup (`.env.example` per package)
+- [x] Redis setup (local dev via Docker)
+- [x] Environment variable setup (`.env.example` per package)
 - [ ] CI pipeline (GitHub Actions: typecheck, lint, test on PR)
 - [ ] Expo bare workflow setup with Expo Router
-- [ ] Bun workspace scripts wired up
+- [x] Bun workspace scripts wired up
 
 ---
 
 ## Backend API (`packages/api`)
 
-- [ ] Hono server setup with Clerk auth middleware
-- [ ] Health check endpoint
+- [x] Hono server setup with Clerk auth middleware
+- [x] Health check endpoint
 - [ ] User routes (create, get profile, update timezone)
 - [ ] Pact routes (create, list, get, pause, delete)
 - [ ] Check-in routes (submit, get by pact/date)
@@ -36,23 +37,23 @@
 - [ ] Clerk webhook handler (user.created → create DB record)
 - [ ] Twitter/X OAuth2 callback handler
 - [ ] Rate limiting middleware
-- [ ] Request logging middleware
+- [x] Request logging middleware
 
 ---
 
 ## Consequence Engine (`packages/queue`)
 
-- [ ] BullMQ + Redis connection setup
+- [x] BullMQ + Redis connection setup
 - [ ] EOD scheduler (timezone-aware, per-user cron)
 - [ ] Missed check-in detection job
 - [ ] Grace day deduction logic
-- [ ] Consequence job schema and type definitions
+- [x] Consequence job schema and type definitions
 - [ ] Shame post worker (Twitter/X API integration)
 - [ ] Lock notification worker (push notification → native module)
 - [ ] Financial consequence worker (Razorpay mandate execution)
 - [ ] Nuclear worker (Tier 1 + 2 + 3 in parallel)
-- [ ] Consequence idempotency guard (status === 'ARMED' check)
-- [ ] Retry logic with exponential backoff
+- [x] Consequence idempotency guard (status === 'ARMED' check)
+- [x] Retry logic with exponential backoff
 - [ ] Debt state handling (failed payment → block new pacts)
 - [ ] "Pact complete — consequence disarmed" flow
 
@@ -86,14 +87,15 @@
 
 ## Database (`packages/db`)
 
-- [ ] `User` model + migration
-- [ ] `Pact` model + migration
-- [ ] `CheckIn` model + migration
-- [ ] `Streak` model + migration
-- [ ] `Consequence` model + migration
-- [ ] `GraceDay` model + migration
-- [ ] `XPLog` model + migration
-- [ ] Performance indexes (see architecture.md)
+- [x] `User` model + migration
+- [x] `Pact` model + migration
+- [x] `CheckIn` model + migration
+- [x] `Streak` model + migration
+- [x] `Consequence` model + migration
+- [x] `GraceDay` model + migration
+- [x] `XPLog` model + migration
+- [x] Performance indexes (see architecture.md)
+- [ ] Run initial migration (prisma migrate dev)
 - [ ] Seed data for development
 
 ---
@@ -168,7 +170,11 @@
 
 ## Completed
 
-*(Nothing yet — project is in setup phase)*
+- Monorepo scaffold — Bun workspaces, root tsconfig, ESLint, Docker Compose
+- `packages/shared` — All types, constants, timezone utils, XP calculator
+- `packages/db` — Prisma schema (7 models), client singleton, adapter setup
+- `packages/api` — Hono server, Clerk auth middleware, all route stubs, webhooks stub
+- `packages/queue` — Redis client, BullMQ worker scaffold, consequence job schema, EOD scheduler stub
 
 ---
 
