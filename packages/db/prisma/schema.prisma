@@ -11,3 +11,76 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+model User {
+  id      String @id @default(uuid())
+  clerkId String @unique
+  name    String
+  email   String @unique
+  level   Int    @default(1)
+  totalXP Int    @default(0)
+
+  // Stored as IANA timezone string e.g. "Asia/Kolkata"
+  // Used by the EOD scheduler to run consequence checks at the right local time
+  timezone String
+
+  // OAuth2 tokens for Twitter/X shame posts — stored encrypted, never in plaintext
+  // Null until the user connects their Twitter account
+  twitterTokens Json?
+
+  createdAt DateTime @default(now())
+
+  // Relations — a user owns many pacts and XP log entries
+  pacts  Pact[]
+  xpLogs XPLog[]
+
+  @@index([clerkId])
+  @@map("users")
+}
+
+model Pact {
+  id          String    @id @default(uuid())
+  userId      String
+  name        String
+  description String?
+  frequency   Frequency
+
+  // Only set when frequency is WEEKLY — e.g. 3 means "3 times per week"
+  weeklyTarget Int?
+
+  // Immutable after creation — users cannot downgrade their stakes mid-streak
+  // This is a core product rule, not a technical constraint
+  consequenceTier Int
+
+  graceDaysAllowed Int @default(0)
+  graceDaysUsed    Int @default(0)
+
+  startDate DateTime
+  endDate   DateTime? // null means infinite pact
+
+  status    PactStatus @default(ACTIVE)
+  createdAt DateTime   @default(now())
+
+  // Relations
+  user        User         @relation(fields: [userId], references: [id], onDelete:
+  Cascade)
+  checkIns    CheckIn[]
+  streak      Streak? // one streak record per pact
+  consequence Consequence? // one consequence config per pact
+  graceDays   GraceDay[]
+
+  @@index([userId, status]) // most common query: get all active pacts for a user
+  @@map("pacts")
+}
+
+enum Frequency {
+  DAILY
+  WEEKLY
+}
+
+enum PactStatus {
+  ACTIVE
+  COMPLETED
+  FAILED
+  PAUSED
+}
